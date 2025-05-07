@@ -22,38 +22,69 @@ let book5 = new Book('Niche Retail Expansion','Marvin Andrade',500,true);
 
 const books=[];
 books.push(book1,book2,book3,book4,book5);
+
+
 const div = document.querySelector('.container');
 
-// Create the table and header
+// Create the table
 const table = document.createElement('table');
 table.innerHTML = `
-    <thead>
-        <tr>
-            <th> ID </th>
-            <th>Title</th>
-            <th>Author</th>
-            <th># of Pages</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody></tbody>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Author</th>
+      <th># of Pages</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
 `;
 
 const tbody = table.querySelector('tbody');
 
-// Populate table rows
-for (const book of books) {
+function renderBooks() {
+  tbody.innerHTML = ''; // Clear the table body first
+
+  books.forEach((book, index) => {
     const row = document.createElement('tr');
+
+    const statusCell = document.createElement('td');
+    statusCell.textContent = book.read ? 'Read' : 'Not yet read';
+
+    // Mark Button
+    const markButton = document.createElement('button');
+    markButton.textContent = book.read ? 'Mark as Unread' : 'Mark as Read';
+    markButton.addEventListener('click', () => {
+      book.read = !book.read;
+      renderBooks(); // Re-render the table
+    });
+
+    // Delete Button
+    const deleteButton = document.createElement('button');
+    deleteButton.textContent = 'Delete';
+    deleteButton.style.marginLeft = '0.5em';
+    deleteButton.style.color = 'red';
+    deleteButton.addEventListener('click', () => {
+      books.splice(index, 1);
+      renderBooks(); // Re-render the table
+    });
+
+    const actionCell = document.createElement('td');
+    actionCell.appendChild(markButton);
+    actionCell.appendChild(deleteButton);
+
     row.innerHTML = `
-        <td>${book.ID}</td>
-        <td>${book.title}</td>
-        <td>${book.author}</td>
-        <td>${book.pages}</td>
-        <td>${book.read ? "Read" : "Not yet read"}</td>
+      <td>${book.title}</td>
+      <td>${book.author}</td>
+      <td>${book.pages}</td>
     `;
+    row.appendChild(statusCell);
+    row.appendChild(actionCell);
+
     tbody.appendChild(row);
+  });
 }
 
-// Add the table to the container
+renderBooks();
 div.appendChild(table);
-

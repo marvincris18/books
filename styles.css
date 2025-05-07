@@ -19,3 +19,7 @@ th, td {
 thead {
     background-color: #f4f4f4;
 }
+
+button {
+    margin: 10px 20px;
+}
