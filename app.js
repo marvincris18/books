@@ -1,63 +1,77 @@
-// UI module to handle DOM interactions
-const UI = (function() {
-    // DOM elements
-    const booksTable = document.getElementById('books-table');
-    const booksTbody = document.getElementById('books-tbody');
-    const emptyState = document.getElementById('empty-state');
-    const addBookBtn = document.getElementById('add-book-btn');
-    const clearLibraryBtn = document.getElementById('clear-library-btn');
-    const modalOverlay = document.getElementById('book-modal-overlay');
-    const modalTitle = document.getElementById('modal-title');
-    const modalClose = document.getElementById('modal-close');
-    const bookForm = document.getElementById('book-form');
-    const bookIdInput = document.getElementById('book-id');
-    const titleInput = document.getElementById('title');
-    const authorInput = document.getElementById('author');
-    const pagesInput = document.getElementById('pages');
-    const readInput = document.getElementById('read');
-    const cancelBtn = document.getElementById('cancel-btn');
-    const saveBtn = document.getElementById('save-btn');
-
-    // Error message elements
-    const titleError = document.getElementById('title-error');
-    const authorError = document.getElementById('author-error');
-    const pagesError = document.getElementById('pages-error');
-
-    function init() {
-        // Load and display books
-        displayBooks();
-
-        // Event listeners
-        addBookBtn.addEventListener('click', openAddBookModal);
-        clearLibraryBtn.addEventListener('click', confirmClearLibrary);
-        modalClose.addEventListener('click', closeModal);
-        cancelBtn.addEventListener('click', closeModal);
-        saveBtn.addEventListener('click', saveBook);
+// UI class to handle DOM interactions
+class UI {
+    constructor(libraryInstance) {
+        // Store reference to library instance
+        this.library = libraryInstance;
         
-        // Close modal when clicking outside
-        modalOverlay.addEventListener('click', function(e) {
-            if (e.target === modalOverlay) {
-                closeModal();
-            }
-        });
+        // DOM elements
+        this.booksTable = document.getElementById('books-table');
+        this.booksTbody = document.getElementById('books-tbody');
+        this.emptyState = document.getElementById('empty-state');
+        this.addBookBtn = document.getElementById('add-book-btn');
+        this.clearLibraryBtn = document.getElementById('clear-library-btn');
+        this.modalOverlay = document.getElementById('book-modal-overlay');
+        this.modalTitle = document.getElementById('modal-title');
+        this.modalClose = document.getElementById('modal-close');
+        this.bookForm = document.getElementById('book-form');
+        this.bookIdInput = document.getElementById('book-id');
+        this.titleInput = document.getElementById('title');
+        this.authorInput = document.getElementById('author');
+        this.pagesInput = document.getElementById('pages');
+        this.readInput = document.getElementById('read');
+        this.cancelBtn = document.getElementById('cancel-btn');
+        this.saveBtn = document.getElementById('save-btn');
+
+        // Error message elements
+        this.titleError = document.getElementById('title-error');
+        this.authorError = document.getElementById('author-error');
+        this.pagesError = document.getElementById('pages-error');
+        
+        // Bind the methods to the instance
+        this.openAddBookModal = this.openAddBookModal.bind(this);
+        this.confirmClearLibrary = this.confirmClearLibrary.bind(this);
+        this.closeModal = this.closeModal.bind(this);
+        this.saveBook = this.saveBook.bind(this);
+        this.handleModalClick = this.handleModalClick.bind(this);
     }
 
-    function displayBooks() {
-        const books = Library.getBooks();
+    init() {
+        // Load and display books
+        this.displayBooks();
+
+        // Event listeners
+        this.addBookBtn.addEventListener('click', this.openAddBookModal);
+        this.clearLibraryBtn.addEventListener('click', this.confirmClearLibrary);
+        this.modalClose.addEventListener('click', this.closeModal);
+        this.cancelBtn.addEventListener('click', this.closeModal);
+        this.saveBtn.addEventListener('click', this.saveBook);
+        
+        // Close modal when clicking outside
+        this.modalOverlay.addEventListener('click', this.handleModalClick);
+    }
+
+    handleModalClick(e) {
+        if (e.target === this.modalOverlay) {
+            this.closeModal();
+        }
+    }
+
+    displayBooks() {
+        const books = this.library.getBooks();
         
         // Clear previous content
-        booksTbody.innerHTML = '';
+        this.booksTbody.innerHTML = '';
         
         if (books.length === 0) {
             // Show empty state, hide table
-            emptyState.style.display = 'block';
-            booksTable.style.display = 'none';
+            this.emptyState.style.display = 'block';
+            this.booksTable.style.display = 'none';
             return;
         }
         
         // Show table, hide empty state
-        emptyState.style.display = 'none';
-        booksTable.style.display = 'table';
+        this.emptyState.style.display = 'none';
+        this.booksTable.style.display = 'table';
         
         // Create table rows
         books.forEach(book => {
@@ -77,130 +91,133 @@ const UI = (function() {
                     <button class="btn-danger delete-btn" data-id="${book.ID}">Delete</button>
                 </td>
             `;
-            booksTbody.appendChild(row);
+            this.booksTbody.appendChild(row);
             
             // Add event listeners to buttons
             const editBtn = row.querySelector('.edit-btn');
             const toggleBtn = row.querySelector('.toggle-btn');
             const deleteBtn = row.querySelector('.delete-btn');
             
-            editBtn.addEventListener('click', () => openEditBookModal(book.ID));
-            toggleBtn.addEventListener('click', () => toggleReadStatus(book.ID));
-            deleteBtn.addEventListener('click', () => confirmDeleteBook(book.ID));
+            editBtn.addEventListener('click', () => this.openEditBookModal(book.ID));
+            toggleBtn.addEventListener('click', () => this.toggleReadStatus(book.ID));
+            deleteBtn.addEventListener('click', () => this.confirmDeleteBook(book.ID));
         });
     }
 
-    function openModal() {
-        modalOverlay.classList.add('active');
+    openModal() {
+        this.modalOverlay.classList.add('active');
     }
 
-    function closeModal() {
-        modalOverlay.classList.remove('active');
-        resetForm();
+    closeModal() {
+        this.modalOverlay.classList.remove('active');
+        this.resetForm();
     }
 
-    function openAddBookModal() {
-        modalTitle.textContent = 'Add New Book';
-        openModal();
+    openAddBookModal() {
+        this.modalTitle.textContent = 'Add New Book';
+        this.openModal();
     }
 
-    function openEditBookModal(bookId) {
-        const book = Library.getBookById(bookId);
+    openEditBookModal(bookId) {
+        const book = this.library.getBookById(bookId);
         if (book) {
-            modalTitle.textContent = 'Edit Book';
-            bookIdInput.value = book.ID;
-            titleInput.value = book.title;
-            authorInput.value = book.author;
-            pagesInput.value = book.pages;
-            readInput.checked = book.read;
-            openModal();
+            this.modalTitle.textContent = 'Edit Book';
+            this.bookIdInput.value = book.ID;
+            this.titleInput.value = book.title;
+            this.authorInput.value = book.author;
+            this.pagesInput.value = book.pages;
+            this.readInput.checked = book.read;
+            this.openModal();
         }
     }
 
-    function resetForm() {
-        bookForm.reset();
-        bookIdInput.value = '';
-        clearErrors();
+    resetForm() {
+        this.bookForm.reset();
+        this.bookIdInput.value = '';
+        this.clearErrors();
     }
 
-    function clearErrors() {
-        titleError.textContent = '';
-        authorError.textContent = '';
-        pagesError.textContent = '';
+    clearErrors() {
+        this.titleError.textContent = '';
+        this.authorError.textContent = '';
+        this.pagesError.textContent = '';
     }
 
-    function validateForm() {
-        clearErrors();
+    validateForm() {
+        this.clearErrors();
         let isValid = true;
 
-        if (titleInput.value.trim() === '') {
-            titleError.textContent = 'Title is required';
+        if (this.titleInput.value.trim() === '') {
+            this.titleError.textContent = 'Title is required';
             isValid = false;
         }
 
-        if (authorInput.value.trim() === '') {
-            authorError.textContent = 'Author is required';
+        if (this.authorInput.value.trim() === '') {
+            this.authorError.textContent = 'Author is required';
             isValid = false;
         }
 
-        if (pagesInput.value.trim() === '' || parseInt(pagesInput.value) <= 0) {
-            pagesError.textContent = 'Enter a valid number of pages';
+        if (this.pagesInput.value.trim() === '' || parseInt(this.pagesInput.value) <= 0) {
+            this.pagesError.textContent = 'Enter a valid number of pages';
             isValid = false;
         }
 
         return isValid;
     }
 
-    function saveBook() {
-        if (!validateForm()) {
+    saveBook() {
+        if (!this.validateForm()) {
             return;
         }
 
-        const title = titleInput.value.trim();
-        const author = authorInput.value.trim();
-        const pages = parseInt(pagesInput.value);
-        const read = readInput.checked;
-        const bookId = bookIdInput.value;
+        const title = this.titleInput.value.trim();
+        const author = this.authorInput.value.trim();
+        const pages = parseInt(this.pagesInput.value);
+        const read = this.readInput.checked;
+        const bookId = this.bookIdInput.value;
 
         if (bookId) {
             // Update existing book
-            Library.updateBook(bookId, title, author, pages, read);
+            this.library.updateBook(bookId, title, author, pages, read);
         } else {
             // Add new book
-            Library.addBook(title, author, pages, read);
+            this.library.addBook(title, author, pages, read);
         }
 
         // Refresh the display and close modal
-        displayBooks();
-        closeModal();
+        this.displayBooks();
+        this.closeModal();
     }
 
-    function toggleReadStatus(bookId) {
-        if (Library.toggleReadStatus(bookId)) {
-            displayBooks();
+    toggleReadStatus(bookId) {
+        if (this.library.toggleReadStatus(bookId)) {
+            this.displayBooks();
         }
     }
 
-    function confirmDeleteBook(bookId) {
-        const book = Library.getBookById(bookId);
+    confirmDeleteBook(bookId) {
+        const book = this.library.getBookById(bookId);
         if (confirm(`Are you sure you want to delete "${book.title}"?`)) {
-            if (Library.deleteBook(bookId)) {
-                displayBooks();
+            if (this.library.deleteBook(bookId)) {
+                this.displayBooks();
             }
         }
     }
 
-    function confirmClearLibrary() {
+    confirmClearLibrary() {
         if (confirm('Are you sure you want to delete ALL books? This cannot be undone.')) {
-            Library.clearBooks();
-            displayBooks();
+            this.library.clearBooks();
+            this.displayBooks();
         }
     }
-
-    return {
-        init
-    };
-})();
+}
 
 // Initialize the UI when DOM is ready
-document.addEventListener('DOMContentLoaded', UI.init);
+document.addEventListener('DOMContentLoaded', () => {
+    // Create library instance
+    const library = new Library();
+    
+    // Create UI instance with library reference
+    const ui = new UI(library);
+    ui.init();
+});
